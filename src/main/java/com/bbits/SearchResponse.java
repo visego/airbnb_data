@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -11,9 +12,17 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
+import com.bbits.dto.BookingsInformation;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 
+/**
+ * 
+ * Class to work with the HTTP Response.
+ * Uses Jsoup library to work with HTTP and Gson to manipulate JSON data
+ * @author visego
+ *
+ */
 public class SearchResponse {
 	
 	public final String PATTERN_URL = "data-url=";
@@ -26,24 +35,64 @@ public class SearchResponse {
 	
 	public final String URL_PAGE = HOST + "/s/Fuengirola--Espa%C3%B1a?page=";
 	
-	public final String URL_DATA = HOST + "/api/v2/calendar_months?key=d306zoyjsyarp7ifhu67rjxn52tv0t20&currency=EUR&locale=es&listing_id=%s&month=%s&year=%s&count=%s&_format=with_conditions";
+	public final String SPECIAL_CHARACTER = "?";
 	
 	/**
+	 * URL of the locations. It can be duplicated. By that, this method should be called by getLocationsByCityProcessed to delete it 
 	 * 
 	 * @param url
-	 * @param page
+	 * @param page number of total pages of this location
 	 * @return A list of all URL locations for the accomodations of a city
 	 * @throws IOException
 	 */
 	
 	//TODO Avoid introduce number of page of the city, scan the number of total pages in the first request
 	//TODO Change the url parameter by a name of the city
-	public List<String> getLocationsByCity(String url, int page) throws IOException{
+	public List<String> getLocationsByCity(String url, int pages) throws IOException{
 		ArrayList<String> output = new ArrayList<String>();
+		System.out.println("Processing request....");
 		
-		for (int i=1; i<page ; i++){
+		for (int i=1; i<pages ; i++){
         	output.addAll(getLocationsByPage(URL_PAGE +i));
         }
+		return output;
+		
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param url
+	 * @param page number of total pages of this location
+	 * @return A HashMap of all URL locations for the accomodations of a city. The key is the id of the accomodation annd
+	 * 			the value is the url of it.
+	 * @throws IOException
+	 */
+	
+	//TODO Avoid introduce number of page of the city, scan the number of total pages in the first request
+	//TODO Change the url parameter by a name of the city
+	public Map<Integer, String> getLocationsByCityProcessed(List<String> locations) throws IOException{
+		Map<Integer, String> output = new HashMap<Integer,String>();
+		
+		int end_index = 0;
+		int j=0;
+		
+		for (String url : locations) {
+			
+			String clave = url.substring(28);
+			for (int i=0; i<clave.length(); i++){
+				if (SPECIAL_CHARACTER.equals(clave.substring(i, i+1))){
+					end_index = i;
+					break;
+				}
+			}
+			//System.out.println(locations.get(j));
+			//System.out.println(clave.substring(0, end_index));
+			output.put(Integer.parseInt(clave.substring(0, end_index)), url);
+			//System.out.println(output.size());
+			j++;
+		}
+		
 		return output;
 		
 	}
@@ -60,7 +109,8 @@ public class SearchResponse {
 		
 		for (Element element : links) {
 			if (MEDIA_PHOTO.equals(element.attributes().get("class"))){
-				System.out.println(HOST.concat(element.attributes().get("href")));
+				//System.out.println(HOST.concat(element.attributes().get("href")));
+				//System.out.println(element.attributes().get("href"));
 				url_location_page.add(HOST.concat(element.attributes().get("href")));
 			}			
 		}
@@ -68,8 +118,9 @@ public class SearchResponse {
 	}
 
 	/**
+	 * Retrieve latitude and longitude of the accomodation
 	 * 
-	 * @param url
+	 * @param url Url of this location. Example: https://www.airbnb.es/rooms/1067652?s=5nej1Cvz
 	 * @return latitude, longitude of the accomodation
 	 * @throws IOException
 	 */
@@ -86,16 +137,5 @@ public class SearchResponse {
 		return position;
 	}
 	
-	public DayInformation getBookings (String id_location, String month_start, String year, String number_months) throws IOException{
-		
-		final String query_url = String.format(URL_DATA, id_location, month_start, year, number_months);
-		String json = Jsoup.connect(query_url).ignoreContentType(true).execute().body();
-		
-		// from JSON to object 
-		Gson gson = new Gson();
-		DayInformation output = gson.fromJson(json,DayInformation.class);
-		
-		return output;
-	}
 	
 }

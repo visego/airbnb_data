@@ -1,6 +1,7 @@
 package com.bbits;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Hello world!
@@ -14,9 +15,13 @@ public class App
     {       
         SearchResponse search= new SearchResponse();
         
-        search.getLocationsByCity(URL_PAGE, 19);
+        BookingResponse booking= new BookingResponse();
+        
+        List<String> url_locations = search.getLocationsByCity(URL_PAGE, 19);
+        
+        search.getLocationsByCityProcessed(url_locations);
               
-        search.getBookings("10587906", "04", "2016", "3");
+        booking.getBookings("10587906", "04", "2016", "3");
           
     }
 }
