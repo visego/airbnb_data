@@ -3,23 +3,27 @@ package com.bbits;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.bbits.dto.BookingsInformation;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 
+import bbdd.MySQL;
+
 /**
  * 
  * Class to work with the HTTP Response.
  * Uses Jsoup library to work with HTTP and Gson to manipulate JSON data
+ * 
  * @author visego
  *
  */
@@ -129,12 +133,46 @@ public class SearchResponse {
 		Document doc = Jsoup.connect(url).get();
 		Elements metaOgTitleLatitude = doc.select("meta[property=airbedandbreakfast:location:latitude]");
 		Elements metaOgTitleLongitude = doc.select("meta[property=airbedandbreakfast:location:longitude]");
+		Elements metaDescription = doc.select("meta[property=og:title]");
 		
-		ArrayList<String> position = new ArrayList<String>();
-		position.add(metaOgTitleLatitude.get(0).attributes().get("content"));
-		position.add(metaOgTitleLongitude.get(0).attributes().get("content"));
+		ArrayList<String> positionAndDescription = new ArrayList<String>();
+		positionAndDescription.add(metaOgTitleLatitude.get(0).attributes().get("content"));
+		positionAndDescription.add(metaOgTitleLongitude.get(0).attributes().get("content"));
+		positionAndDescription.add(metaDescription.get(0).attributes().get("content"));
 		
-		return position;
+		
+		return positionAndDescription;
+	}
+	
+	/**
+	 *  Save data of location, city and description of map in the argument
+	 * @param map Key is the id of the acommodation and String is the URL of it
+	 * @throws Exception
+	 */
+	public void saveDataToBBDD(final Map<Integer, String> map) throws Exception{
+		final Iterator<Entry<Integer, String>> it = map.entrySet().iterator();
+
+		Entry<Integer, String> entry= null;
+	    String url=null;
+
+		Integer id =null;
+
+		MySQL db = new MySQL();
+		
+		while (it.hasNext()) {
+			entry= it.next();
+			
+			id = entry.getKey(); 
+			url = entry.getValue(); 
+			
+			// Call to method data location to retrieve longitude and latitude of the acommodation
+			List<String> location = getDataLocation(url);
+			
+			// Save data in BBDD
+			db.saveData(Integer.toString(id), "Fuengirola", location.get(2), location.get(0), location.get(1));
+
+		}
+
 	}
 	
 	
