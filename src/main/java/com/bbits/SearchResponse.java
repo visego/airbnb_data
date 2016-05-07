@@ -134,11 +134,13 @@ public class SearchResponse {
 		Elements metaOgTitleLatitude = doc.select("meta[property=airbedandbreakfast:location:latitude]");
 		Elements metaOgTitleLongitude = doc.select("meta[property=airbedandbreakfast:location:longitude]");
 		Elements metaDescription = doc.select("meta[property=og:title]");
+		Elements metaLocation    = doc.select("meta[property=airbedandbreakfast:locality]");
 		
 		ArrayList<String> positionAndDescription = new ArrayList<String>();
 		positionAndDescription.add(metaOgTitleLatitude.get(0).attributes().get("content"));
 		positionAndDescription.add(metaOgTitleLongitude.get(0).attributes().get("content"));
 		positionAndDescription.add(metaDescription.get(0).attributes().get("content"));
+		positionAndDescription.add(metaLocation.get(0).attributes().get("content"));
 		
 		
 		return positionAndDescription;
@@ -159,20 +161,41 @@ public class SearchResponse {
 
 		MySQL db = new MySQL();
 		
+		int count_new = 0;
+		int checked = 0;
+		
 		while (it.hasNext()) {
 			entry= it.next();
 			
 			id = entry.getKey(); 
 			url = entry.getValue(); 
 			
-			// Call to method data location to retrieve longitude and latitude of the acommodation
-			List<String> location = getDataLocation(url);
+			boolean isSavedLocation = db.getDataByID(Integer.toString(id));
+			if (!isSavedLocation){
+				// Call to method data location to retrieve longitude and latitude of the acommodation
+				List<String> location = getDataLocation(url);
+				
+				if (location.get(3).equals("Fuengirola")){
+					// Save data in BBDD
+					db.saveData(Integer.toString(id), location.get(3), location.get(2), location.get(0), location.get(1));
+					System.out.println(String.format("The information for accomodation id %s is NOT saved", id));
+					System.out.println("SAVING...");
+					count_new++;
+				}else{
+					System.out.println(String.format("The information for accomodation id %s is NOT saved but it is %s", id,location.get(3)));
+					System.out.println("NO SAVING!!!!!");
+				}
+					
+			}
+			else{
+				System.out.println(String.format("The information for accomodation id %s is saved", id));
+				checked++;
+			}
 			
-			// Save data in BBDD
-			db.saveData(Integer.toString(id), "Fuengirola", location.get(2), location.get(0), location.get(1));
-
 		}
 
+		System.out.println("New flats: " + count_new);
+		System.out.println("Flats checked: " + checked);
 	}
 	
 	
