@@ -17,7 +17,7 @@ import com.bbits.dto.BookingsInformation;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 
-import bbdd.MySQL;
+import dao.Locations;
 
 /**
  * 
@@ -39,7 +39,15 @@ public class SearchResponse {
 	
 	public final String URL_PAGE = HOST + "/s/Fuengirola--Espa%C3%B1a?page=";
 	
+	public final String URL_PAGE_2 = HOST + "/s/Fuengirola--España?room_types%5B%5D=Entire+home%2Fapt&ss_id=l1orjwf2&page=2&s_tag=jqIktzdI";
+	
 	public final String SPECIAL_CHARACTER = "?";
+	
+	public final String TYPE_OF_LOCATION_ENTIRE = "Casa/apto. entero";
+	
+	public final String TYPE_OF_LOCATION_SHARED_ROOM = "Habitación compartida";
+	
+	public final String TYPE_OF_LOCATION_PRIVATE_ROOM = "Habitación privada";
 	
 	/**
 	 * URL of the locations. It can be duplicated. By that, this method should be called by getLocationsByCityProcessed to delete it 
@@ -64,8 +72,7 @@ public class SearchResponse {
 	}
 	
 	/**
-	 * 
-	 * 
+
 	 * @param url
 	 * @param page number of total pages of this location
 	 * @return A HashMap of all URL locations for the accomodations of a city. The key is the id of the accomodation annd
@@ -90,10 +97,7 @@ public class SearchResponse {
 					break;
 				}
 			}
-			//System.out.println(locations.get(j));
-			//System.out.println(clave.substring(0, end_index));
 			output.put(Integer.parseInt(clave.substring(0, end_index)), url);
-			//System.out.println(output.size());
 			j++;
 		}
 		
@@ -113,8 +117,6 @@ public class SearchResponse {
 		
 		for (Element element : links) {
 			if (MEDIA_PHOTO.equals(element.attributes().get("class"))){
-				//System.out.println(HOST.concat(element.attributes().get("href")));
-				//System.out.println(element.attributes().get("href"));
 				url_location_page.add(HOST.concat(element.attributes().get("href")));
 			}			
 		}
@@ -135,12 +137,25 @@ public class SearchResponse {
 		Elements metaOgTitleLongitude = doc.select("meta[property=airbedandbreakfast:location:longitude]");
 		Elements metaDescription = doc.select("meta[property=og:title]");
 		Elements metaLocation    = doc.select("meta[property=airbedandbreakfast:locality]");
+		Elements metaTypeOfLocation = doc.select("meta[name=description]");
 		
 		ArrayList<String> positionAndDescription = new ArrayList<String>();
 		positionAndDescription.add(metaOgTitleLatitude.get(0).attributes().get("content"));
 		positionAndDescription.add(metaOgTitleLongitude.get(0).attributes().get("content"));
 		positionAndDescription.add(metaDescription.get(0).attributes().get("content"));
 		positionAndDescription.add(metaLocation.get(0).attributes().get("content"));
+		
+		final String typeOfRoom = metaTypeOfLocation.get(0).attributes().get("content");
+		
+		if(typeOfRoom.contains(TYPE_OF_LOCATION_ENTIRE)){
+			positionAndDescription.add("Entire");
+		}else{
+			if(typeOfRoom.contains(TYPE_OF_LOCATION_PRIVATE_ROOM)){
+				positionAndDescription.add("Private");
+			}else{
+				positionAndDescription.add("Shared");
+			}
+		}
 		
 		
 		return positionAndDescription;
@@ -159,7 +174,7 @@ public class SearchResponse {
 
 		Integer id =null;
 
-		MySQL db = new MySQL();
+		Locations locations = new Locations();
 		
 		int count_new = 0;
 		int checked = 0;
@@ -170,14 +185,14 @@ public class SearchResponse {
 			id = entry.getKey(); 
 			url = entry.getValue(); 
 			
-			boolean isSavedLocation = db.getDataByID(Integer.toString(id));
+			boolean isSavedLocation = locations.getDataByID(Integer.toString(id));
 			if (!isSavedLocation){
 				// Call to method data location to retrieve longitude and latitude of the acommodation
 				List<String> location = getDataLocation(url);
 				
 				if (location.get(3).equals("Fuengirola")){
 					// Save data in BBDD
-					db.saveData(Integer.toString(id), location.get(3), location.get(2), location.get(0), location.get(1));
+					locations.saveData(Integer.toString(id), location.get(3), location.get(2), location.get(0), location.get(1), location.get(4));
 					System.out.println(String.format("The information for accomodation id %s is NOT saved", id));
 					System.out.println("SAVING...");
 					count_new++;

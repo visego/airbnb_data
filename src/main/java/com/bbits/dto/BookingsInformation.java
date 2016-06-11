@@ -13,4 +13,8 @@ public class BookingsInformation
     {
         this.calendar_months = calendar_months;
     }
+    
+    public Calendar_months getCalendarMonth(int i){
+    	return calendar_months[i];
+    }
 }

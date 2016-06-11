@@ -4,7 +4,7 @@ public class Days
 {
     private Price price;
 
-    private String available;
+    private boolean available;
 
     private String date;
 
@@ -18,12 +18,12 @@ public class Days
         this.price = price;
     }
 
-    public String getAvailable ()
+    public boolean getAvailable ()
     {
         return available;
     }
 
-    public void setAvailable (String available)
+    public void setAvailable (boolean available)
     {
         this.available = available;
     }
