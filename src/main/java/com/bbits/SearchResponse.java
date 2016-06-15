@@ -106,7 +106,7 @@ public class SearchResponse {
 	}
 	
 	private List<String> getLocationsByPage(String url) throws IOException{
-		Document doc = Jsoup.connect(url).get();
+		Document doc = Jsoup.connect(url).timeout(0).get();
 		System.out.println(url);
 		
 		Elements masthead = doc.select("div.MEDIA_PHOTO");
@@ -132,12 +132,13 @@ public class SearchResponse {
 	 */
 	public List<String> getDataLocation(String url) throws IOException{
 		
-		Document doc = Jsoup.connect(url).get();
+		Document doc = Jsoup.connect(url).timeout(0).get();
 		Elements metaOgTitleLatitude = doc.select("meta[property=airbedandbreakfast:location:latitude]");
 		Elements metaOgTitleLongitude = doc.select("meta[property=airbedandbreakfast:location:longitude]");
 		Elements metaDescription = doc.select("meta[property=og:title]");
 		Elements metaLocation    = doc.select("meta[property=airbedandbreakfast:locality]");
 		Elements metaTypeOfLocation = doc.select("meta[name=description]");
+		Elements metaURL = doc.select("meta[property=og:url]");
 		
 		ArrayList<String> positionAndDescription = new ArrayList<String>();
 		positionAndDescription.add(metaOgTitleLatitude.get(0).attributes().get("content"));
@@ -157,6 +158,7 @@ public class SearchResponse {
 			}
 		}
 		
+		positionAndDescription.add(metaURL.get(0).attributes().get("content"));
 		
 		return positionAndDescription;
 	}
@@ -192,7 +194,8 @@ public class SearchResponse {
 				
 				if (location.get(3).equals("Fuengirola")){
 					// Save data in BBDD
-					locations.saveData(Integer.toString(id), location.get(3), location.get(2), location.get(0), location.get(1), location.get(4));
+					final String description_processed = location.get(2).replace("'","''");
+					locations.saveData(Integer.toString(id), location.get(3), description_processed, location.get(0), location.get(1), location.get(4));
 					System.out.println(String.format("The information for accomodation id %s is NOT saved", id));
 					System.out.println("SAVING...");
 					count_new++;

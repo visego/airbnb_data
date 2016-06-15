@@ -16,9 +16,11 @@ public class StatisticsController {
 	final String DATE_YEAR_MONTH = "%s-%s";
 	
 	public void saveLocationsStatsComplete(final List<String> id_locations, final String year, final String month) throws Exception{
+		int counter =0;
 		for (String id_location : id_locations) {
+			counter++;
 			saveLocationStats(id_location,year,month);
-			System.out.println(String.format("Saved or updated data for %s location and date %s-%s", id_location,year,month));
+			System.out.println(String.format("Saved or updated data for %s location and date %s-%s. %d of %d locations", id_location,year,month,counter,id_locations.size()));
 		}
 	}
 	

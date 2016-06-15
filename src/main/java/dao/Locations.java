@@ -47,7 +47,7 @@ public class Locations extends Common{
             final String INSERT_STATEMENT ="INSERT INTO locations (id, city, description, latitude, longitude, type)  VALUES ('%s','%s', '%s','%s','%s','%s')";
             PreparedStatement prepInsert = 
                 		conexion.prepareStatement(String.format(INSERT_STATEMENT, id, city, description, latitude, longitude, type));
-                
+        	System.out.println(String.format(INSERT_STATEMENT, id, city, description, latitude, longitude, type));
             prepInsert.executeUpdate();
             
             closeConnection();
@@ -55,6 +55,7 @@ public class Locations extends Common{
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(Locations.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
+
             Logger.getLogger(Locations.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

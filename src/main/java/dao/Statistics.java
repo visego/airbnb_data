@@ -60,11 +60,12 @@ public class Statistics extends Common {
             }
             if (rows==1){
             	statsInfo.add(Boolean.toString(true));
+            	statsInfo.add(res.getString(3));
+            	statsInfo.add(res.getString(4));
             }else{
             	statsInfo.add(Boolean.toString(false));
             }
-        	statsInfo.add(res.getString(3));
-        	statsInfo.add(res.getString(4));
+
             
             closeConnection();
 

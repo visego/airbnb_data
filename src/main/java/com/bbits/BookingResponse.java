@@ -1,6 +1,7 @@
 package com.bbits;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jsoup.HttpStatusException;
@@ -40,7 +41,7 @@ public class BookingResponse {
 		final String query_url = String.format(URL_DATA, id_location, month_start, year, number_months);
 		String json = null;
 		try{
-			json = Jsoup.connect(query_url).ignoreContentType(true).execute().body();
+			json = Jsoup.connect(query_url).timeout(0).ignoreContentType(true).execute().body();
 			// from JSON to object 
 			Gson gson = new Gson();
 			BookingsInformation output = gson.fromJson(json,BookingsInformation.class);
@@ -63,12 +64,11 @@ public class BookingResponse {
     	for (Days day : days) {
     		List<String> isSavedDay = locations.getBookByIDAndDate(id_location,day.getDate());
     						
-    		if (!isSavedDay.get(0).equals("false")){
+    		if (isSavedDay.get(0).equals("false")){
     			locations.saveDataDays(id_location, day.getDate(), day.getPrice().getLocal_price(), day.getAvailable(),true);
     			System.out.println(String.format("Saving day... id_location %s and day %s",id_location,day.getDate()));
     		}else{
-
-    			if (isSavedDay.get(1) != day.getPrice().getLocal_price() || isSavedDay.get(2) != String.valueOf(day.getAvailable())){
+    			if (!isSavedDay.get(1).equals(day.getPrice().getLocal_price()) || !isSavedDay.get(2).equals(String.valueOf(day.getAvailable())) ){
     				locations.saveDataDays(id_location, day.getDate(), day.getPrice().getLocal_price(), day.getAvailable(),false);
     				System.out.println(String.format("Saving day... id_location %s and day %s with changes",id_location,day.getDate()));
     			}
@@ -81,5 +81,31 @@ public class BookingResponse {
 		}
 		
 	}
+	
+public void saveBookingInformationComplete(final String id_location, final BookingsInformation bookings, final List<String> months) throws Exception{
+		
+		Bookings locations = new Bookings();
+		
+		Calendar_months calendar  = bookings.getCalendarMonth(0);
+    	Days[] days = calendar.getDays();
+    	
+    	List<String> dates = new ArrayList<String>();
+    	List<String> prices = new ArrayList<String>();
+    	List<Boolean> availables = new ArrayList<Boolean>();
+    	List<Boolean> inserts = new ArrayList<Boolean>();
+    
+    	for (Days day : days) {
+    		List<String> isSavedDay = locations.getBookByIDAndDate(id_location,day.getDate());
+    		dates.add(day.getDate());
+    		prices.add(day.getPrice().getLocal_price());
+    		availables.add(day.getAvailable());
+    		inserts.add(Boolean.getBoolean(isSavedDay.get(0)));
+    		
+    	}
+    		
+    	locations.saveDataDaysBig(id_location, dates, prices, availables, inserts);
+		
+	}
+	
 
 }
