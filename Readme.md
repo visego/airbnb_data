@@ -1,5 +1,5 @@
 
-
+BnbAnalytics
 
 Resources -- sql instruction to create locations table
 
